@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dijkstra's Algorithm - Cavite Province Route Finder</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #3498db;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        select, input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .graph-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+            cursor: pointer;
+            flex: 1;
+            min-width: 600px;
+            height: auto;
+        }
+
+        .info-panel {
+            flex: 0 0 350px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .result {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result p {
+            margin: 8px 0;
+        }
+
+        .result .cost {
+            font-size: 20px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .result .path {
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            background: #f0f0f0;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .legend {
+            margin-top: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 5px 10px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        hr {
+            margin: 15px 0;
+            border: none;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .comparison-table {
+            margin-top: 15px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .comparison-table th {
+            font-weight: bold;
+            color: #495057;
+            background: #e9ecef;
+            position: sticky;
+            top: 0;
+        }
+
+        .route-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Dijkstra's Algorithm Visualizer</h1>
+        <div class="subtitle">Cavite Province Route Finder - Find shortest path by Distance, Time, or Fuel</div>
+
+        <div class="controls">
+            <button id="btnReset" class="btn-primary">🔄 Reset to Default</button>
+            <button id="btnClear" class="btn-danger">🗑️ Clear Highlighting</button>
+            <button id="btnCompareAll" class="btn-info">📊 Show All Routes</button>
+        </div>
+
+        <div class="graph-container">
+            <canvas id="graphCanvas" width="900" height="600"></canvas>
+            
+            <div class="info-panel">
+                <h3>🎯 Find Shortest Path</h3>
+                
+                <div>
+                    <label><strong>From (Start Node):</strong></label>
+                    <select id="startNode" style="width: 100%; margin-bottom: 10px;">
+                        <option value="Imus">Imus</option>
+                        <option value="Bacoor">Bacoor</option>
+                        <option value="Dasma">Dasma</option>
+                        <option value="Kawit">Kawit</option>
+                        <option value="Indang">Indang</option>
+                        <option value="Silang">Silang</option>
+                        <option value="Gentri">Gentri</option>
+                        <option value="Noveleta">Noveleta</option>
+                    </select>
+                    
+                    <label><strong>To (End Node):</strong></label>
+                    <select id="endNode" style="width: 100%; margin-bottom: 15px;">
+                        <option value="Imus">Imus</option>
+                        <option value="Bacoor">Bacoor</option>
+                        <option value="Dasma">Dasma</option>
+                        <option value="Kawit">Kawit</option>
+                        <option value="Indang">Indang</option>
+                        <option value="Silang">Silang</option>
+                        <option value="Gentri">Gentri</option>
+                        <option value="Noveleta">Noveleta</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label><strong>Optimization Type:</strong></label>
+                    <select id="weightType" style="width: 100%; margin-bottom: 15px;">
+                        <option value="distance">📏 Shortest Distance (km)</option>
+                        <option value="time">⏱️ Fastest Time (minutes)</option>
+                        <option value="fuel">⛽ Least Fuel (liters)</option>
+                    </select>
+                </div>
+                
+                <button id="btnRun" class="btn-success" style="width: 100%;">🚀 Find Optimal Route</button>
+                
+                <div id="result" class="result" style="display: none;">
+                    <h4>📊 Optimal Route Results:</h4>
+                    <p><strong>Path:</strong> <span id="pathResult" class="path"></span></p>
+                    <p><strong>Optimized Value:</strong> <span id="costResult" class="cost"></span></p>
+                    <hr>
+                    <p><strong>📏 Total Distance:</strong> <span id="totalDistance">-</span> km</p>
+                    <p><strong>⏱️ Total Time:</strong> <span id="totalTime">-</span> minutes</p>
+                    <p><strong>⛽ Total Fuel:</strong> <span id="totalFuel">-</span> liters</p>
+                </div>
+                
+                <div class="comparison-table" id="comparisonTable" style="display: none;">
+                    <h4>📊 All Possible Routes:</h4>
+                    <table id="comparisonData">
+                        <thead>
+                            <tr><th>Route Path</th><th>Distance</th><th>Time</th><th>Fuel</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <div class="status" id="status">
+                    💡 Select start and end locations, then click "Find Optimal Route"
+                </div>
+                
+                <div class="legend">
+                    <h4>Legend:</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3498db;"></div>
+                        <span>Location Node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #27ae60;"></div>
+                        <span>Start Location</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e74c3c;"></div>
+                        <span>End Location</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f39c12;"></div>
+                        <span>Optimal Route</span>
+                    </div>
+                </div>
+                
+                <div class="route-info">
+                    <strong>💡 Did you know?</strong><br>
+                    Dijkstra's algorithm finds the shortest path by always exploring the node with the smallest known distance first!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Graph data from Cavite province routes
+        const graph = {
+            "Imus": {"Bacoor": {"distance": 10, "time": 15, "fuel": 1.2},
+                     "Noveleta": {"distance": 10, "time": 15, "fuel": 1.2}},
+            
+            "Bacoor": {"Imus": {"distance": 10, "time": 15, "fuel": 1.2},
+                       "Dasma": {"distance": 12, "time": 25, "fuel": 1.5},
+                       "Silang": {"distance": 10, "time": 25, "fuel": 1.3},
+                       "Noveleta": {"distance": 10, "time": 15, "fuel": 1.2}},
+            
+            "Dasma": {"Bacoor": {"distance": 12, "time": 25, "fuel": 1.5},
+                      "Kawit": {"distance": 12, "time": 25, "fuel": 1.5},
+                      "Silang": {"distance": 12, "time": 25, "fuel": 1.5}},
+            
+            "Kawit": {"Dasma": {"distance": 12, "time": 25, "fuel": 1.5},
+                      "Indang": {"distance": 12, "time": 25, "fuel": 1.5},
+                      "Silang": {"distance": 14, "time": 25, "fuel": 1.2}},
+            
+            "Indang": {"Kawit": {"distance": 12, "time": 25, "fuel": 1.5},
+                       "Silang": {"distance": 14, "time": 25, "fuel": 1.5}},
+            
+            "Silang": {"Indang": {"distance": 14, "time": 25, "fuel": 1.5},
+                       "Gentri": {"distance": 10, "time": 25, "fuel": 1.5},
+                       "Bacoor": {"distance": 10, "time": 25, "fuel": 1.3},
+                       "Dasma": {"distance": 12, "time": 25, "fuel": 1.5},
+                       "Kawit": {"distance": 14, "time": 25, "fuel": 1.2}},
+            
+            "Gentri": {"Silang": {"distance": 10, "time": 25, "fuel": 1.5},
+                       "Noveleta": {"distance": 10, "time": 25, "fuel": 1.5}},
+            
+            "Noveleta": {"Gentri": {"distance": 10, "time": 25, "fuel": 1.5},
+                         "Imus": {"distance": 10, "time": 15, "fuel": 1.2},
+                         "Bacoor": {"distance": 10, "time": 15, "fuel": 1.2}}
+        };
+
+        // Node positions for visualization
+        const nodePositions = {
+            "Imus": {x: 200, y: 400},
+            "Bacoor": {x: 100, y: 250},
+            "Dasma": {x: 300, y: 150},
+            "Kawit": {x: 500, y: 100},
+            "Indang": {x: 700, y: 150},
+            "Silang": {x: 450, y: 300},
+            "Gentri": {x: 600, y: 400},
+            "Noveleta": {x: 350, y: 500}
+        };
+
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let currentPath = [];
+        let startNode = "Imus";
+        let endNode = "Noveleta";
+
+        // Dijkstra algorithm implementation
+        function dijkstra(graph, start, end, weightType) {
+            if (!graph[start] || !graph[end]) {
+                return { cost: Infinity, path: [] };
+            }
+
+            const distances = {};
+            const previous = {};
+            const unvisited = new Set();
+            
+            // Initialize distances
+            for (const node in graph) {
+                distances[node] = Infinity;
+                unvisited.add(node);
+            }
+            distances[start] = 0;
+            
+            while (unvisited.size > 0) {
+                // Find node with minimum distance
+                let current = null;
+                let minDistance = Infinity;
+                for (const node of unvisited) {
+                    if (distances[node] < minDistance) {
+                        minDistance = distances[node];
+                        current = node;
+                    }
+                }
+                
+                if (current === null || current === end) break;
+                
+                unvisited.delete(current);
+                
+                // Update distances to neighbors
+                for (const [neighbor, attrs] of Object.entries(graph[current] || {})) {
+                    if (unvisited.has(neighbor)) {
+                        const newDistance = distances[current] + attrs[weightType];
+                        if (newDistance < distances[neighbor]) {
+                            distances[neighbor] = newDistance;
+                            previous[neighbor] = current;
+                        }
+                    }
+                }
+            }
+            
+            // Reconstruct path
+            const path = [];
+            let current = end;
+            while (current !== undefined && current !== start) {
+                path.unshift(current);
+                current = previous[current];
+            }
+            if (current === start) {
+                path.unshift(start);
+                return { cost: distances[end], path };
+            }
+            
+            return { cost: Infinity, path: [] };
+        }
+
+        // Compute totals for a path
+        function computeTotals(path) {
+            let distance = 0, time = 0, fuel = 0;
+            
+            for (let i = 0; i < path.length - 1; i++) {
+                const edge = graph[path[i]][path[i + 1]];
+                if (edge) {
+                    distance += edge.distance;
+                    time += edge.time;
+                    fuel += edge.fuel;
+                }
+            }
+            
+            return { distance, time, fuel: fuel.toFixed(2) };
+        }
+
+        // Find all possible paths using DFS
+        function findAllPaths(graph, start, end, path = [], paths = []) {
+            path = [...path, start];
+            
+            if (start === end) {
+                paths.push(path);
+                return;
+            }
+            
+            for (const neighbor of Object.keys(graph[start] || {})) {
+                if (!path.includes(neighbor)) {
+                    findAllPaths(graph, neighbor, end, path, paths);
+                }
+            }
+            
+            return paths;
+        }
+
+        // Draw the graph
+        function drawGraph() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw edges
+            for (const [u, neighbors] of Object.entries(graph)) {
+                const fromPos = nodePositions[u];
+                if (!fromPos) continue;
+                
+                for (const [v, attrs] of Object.entries(neighbors)) {
+                    const toPos = nodePositions[v];
+                    if (!toPos) continue;
+                    
+                    // Check if this edge is part of the current path
+                    let isInPath = false;
+                    for (let i = 0; i < currentPath.length - 1; i++) {
+                        if ((currentPath[i] === u && currentPath[i+1] === v) ||
+                            (currentPath[i] === v && currentPath[i+1] === u)) {
+                            isInPath = true;
+                            break;
+                        }
+                    }
+                    
+                    // Draw edge
+                    ctx.beginPath();
+                    ctx.moveTo(fromPos.x, fromPos.y);
+                    ctx.lineTo(toPos.x, toPos.y);
+                    ctx.strokeStyle = isInPath ? '#f39c12' : '#999';
+                    ctx.lineWidth = isInPath ? 4 : 2;
+                    ctx.stroke();
+                    
+                    // Draw edge label (show distance)
+                    const midX = (fromPos.x + toPos.x) / 2;
+                    const midY = (fromPos.y + toPos.y) / 2;
+                    ctx.fillStyle = '#666';
+                    ctx.font = '11px Arial';
+                    ctx.fillText(`${attrs.distance}km`, midX, midY - 5);
+                    ctx.fillStyle = '#999';
+                    ctx.font = '9px Arial';
+                    ctx.fillText(`${attrs.time}min`, midX, midY + 5);
+                }
+            }
+            
+            // Draw nodes
+            for (const [node, pos] of Object.entries(nodePositions)) {
+                // Determine node color
+                let color = '#3498db';
+                if (node === startNode) color = '#27ae60';
+                if (node === endNode) color = '#e74c3c';
+                if (currentPath.includes(node) && node !== startNode && node !== endNode) {
+                    color = '#f39c12';
+                }
+                
+                // Draw circle
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 30, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Add shadow effect for start/end nodes
+                if (node === startNode || node === endNode) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 33, 0, 2 * Math.PI);
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+                
+                // Draw node label
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(node, pos.x, pos.y);
+            }
+        }
+
+        // Run Dijkstra and display results
+        function findPath() {
+            startNode = document.getElementById('startNode').value;
+            endNode = document.getElementById('endNode').value;
+            const weightType = document.getElementById('weightType').value;
+            
+            if (startNode === endNode) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = '❌ Start and end locations cannot be the same!';
+                statusDiv.className = 'status error';
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+            
+            // Show loading state
+            const runButton = document.getElementById('btnRun');
+            const originalText = runButton.innerHTML;
+            runButton.innerHTML = '⏳ Finding Optimal Route...';
+            runButton.disabled = true;
+            
+            setTimeout(() => {
+                // Run Dijkstra
+                const { cost, path } = dijkstra(graph, startNode, endNode, weightType);
+                currentPath = path;
+                
+                if (path.length === 0) {
+                    const statusDiv = document.getElementById('status');
+                    statusDiv.innerHTML = '❌ No path found between the selected locations!';
+                    statusDiv.className = 'status error';
+                    document.getElementById('result').style.display = 'none';
+                    drawGraph();
+                    runButton.innerHTML = originalText;
+                    runButton.disabled = false;
+                    return;
+                }
+                
+                // Compute totals
+                const totals = computeTotals(path);
+                
+                // Display results
+                const weightLabels = {
+                    'distance': 'km',
+                    'time': 'minutes',
+                    'fuel': 'liters'
+                };
+                
+                const weightNames = {
+                    'distance': 'Distance',
+                    'time': 'Time',
+                    'fuel': 'Fuel'
+                };
+                
+                document.getElementById('pathResult').textContent = path.join(' → ');
+                document.getElementById('costResult').textContent = `${cost.toFixed(2)} ${weightLabels[weightType]}`;
+                document.getElementById('totalDistance').textContent = totals.distance;
+                document.getElementById('totalTime').textContent = totals.time;
+                document.getElementById('totalFuel').textContent = totals.fuel;
+                document.getElementById('result').style.display = 'block';
+                
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = `✅ Optimal route found! Minimized ${weightNames[weightType]} from ${startNode} to ${endNode}.`;
+                statusDiv.className = 'status success';
+                
+                drawGraph();
+                runButton.innerHTML = originalText;
+                runButton.disabled = false;
+            }, 100);
+        }
+        
+        // Compare all possible paths
+        function compareAllPaths() {
+            startNode = document.getElementById('startNode').value;
+            endNode = document.getElementById('endNode').value;
+            
+            if (startNode === endNode) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = '❌ Cannot compare routes when start and end are the same!';
+                statusDiv.className = 'status error';
+                return;
+            }
+            
+            const allPaths = findAllPaths(graph, startNode, endNode);
+            
+            if (!allPaths || allPaths.length === 0) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = '❌ No paths found between the selected locations!';
+                statusDiv.className = 'status error';
+                return;
+            }
+            
+            const comparisonData = [];
+            for (const path of allPaths) {
+                const totals = computeTotals(path);
+                comparisonData.push({
+                    path: path.join(' → '),
+                    distance: totals.distance,
+                    time: totals.time,
+                    fuel: totals.fuel
+                });
+            }
+            
+            // Sort by distance
+            comparisonData.sort((a, b) => a.distance - b.distance);
+            
+            // Populate table
+            const tableBody = document.querySelector('#comparisonData tbody');
+            tableBody.innerHTML = '';
+            for (const data of comparisonData) {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = data.path;
+                row.insertCell(1).textContent = `${data.distance} km`;
+                row.insertCell(2).textContent = `${data.time} min`;
+                row.insertCell(3).textContent = `${data.fuel} L`;
+            }
+            
+            document.getElementById('comparisonTable').style.display = 'block';
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `📊 Found ${comparisonData.length} possible route(s) from ${startNode} to ${endNode}`;
+            statusDiv.className = 'status success';
+        }
+        
+        // Reset highlighting
+        function clearHighlighting() {
+            currentPath = [];
+            drawGraph();
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('comparisonTable').style.display = 'none';
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '💡 Route highlighting cleared. Select new locations to find optimal routes.';
+            statusDiv.className = 'status';
+        }
+        
+        // Reset to default
+        function resetGraph() {
+            document.getElementById('startNode').value = 'Imus';
+            document.getElementById('endNode').value = 'Noveleta';
+            document.getElementById('weightType').value = 'distance';
+            clearHighlighting();
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '💡 Graph reset to default. Try finding the optimal route from Imus to Noveleta!';
+            statusDiv.className = 'status';
+        }
+        
+        // Handle canvas resize
+        function handleResize() {
+            drawGraph();
+        }
+        
+        // Event listeners
+        document.getElementById('btnRun').addEventListener('click', findPath);
+        document.getElementById('btnClear').addEventListener('click', clearHighlighting);
+        document.getElementById('btnReset').addEventListener('click', resetGraph);
+        document.getElementById('btnCompareAll').addEventListener('click', compareAllPaths);
+        window.addEventListener('resize', handleResize);
+        
+        // Initial draw
+        setTimeout(() => {
+            drawGraph();
+        }, 100);
+    </script>
+</body>
+</html>
